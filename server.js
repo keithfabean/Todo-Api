@@ -1,6 +1,8 @@
 var express = require('express');
 var app = express();
 
+var bodyParser = require('body-parser');
+
 var PORT = process.env.PORT || 3000;
 
 //set up the array that will hold the ToDo items
@@ -10,13 +12,16 @@ var todos = [{
   completed: false
 }, {
   id: 2,
-  description: 'Mow the lawn',
+  description: 'Play With Bonnie',
   completed: false
 }, {
   id: 3,
   description: 'Brush the pool',
   completed: true
 }];
+var todoNextId = 4;
+
+app.use(bodyParser.json());
 
 //------------------------------------------------------
 app.get('/', function(req, res){
@@ -50,6 +55,20 @@ app.get('/todos/:id', function(req, res){
 
 //  res.send('Asking for Todo with id of: ' + req.params.id);
 });
+
+app.post('/todos', function(req, res){
+  var body = req.body;
+
+  //add id field to the todolist and increment id
+  body.id = todoNextId;
+  todoNextId = ++todoNextId;
+
+  //push body to array
+  todos.push(body);
+
+  res.json(body);
+
+})
 
 //------------------------------------------------------
 app.listen(PORT, function(){
