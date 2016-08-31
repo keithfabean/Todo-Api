@@ -78,7 +78,22 @@ app.post('/todos', function(req, res){
 
   res.json(body);
 
-})
+});
+
+//------------------------------------------------------
+app.delete('/todos/:id', function(req, res){
+  var todoId = parseInt(req.params.id,10);
+
+  var todoItem = _.findWhere(todos, {id: todoId});
+
+  if (todoItem){
+    todos = _.without(todos, todoItem);
+    res.json(todoItem);
+  }else {
+    res.status(404).json({"error": "No Item to delete with that id!"});
+  }
+
+});
 
 //------------------------------------------------------
 app.listen(PORT, function(){
