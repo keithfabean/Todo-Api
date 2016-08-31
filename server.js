@@ -96,6 +96,42 @@ app.delete('/todos/:id', function(req, res){
 });
 
 //------------------------------------------------------
+app.put('/todos/:id', function(req, res){
+  //Make sure only valid fields are in the body.  _.pick will remove attributes not specified
+  var body = _.pick(req.body, 'description', 'completed');
+  var validAttributes = {};
+
+  //Find the todo item with the matching ID
+  var todoId = parseInt(req.params.id,10);
+  var todoItem = _.findWhere(todos, {id: todoId});
+
+  if (!todoItem){
+    res.status(404).json({"error": "No Item found to update!"});
+  }
+
+  if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)){
+    validAttributes.completed = body.completed;
+  } else if(body.hasOwnProperty('completed')){
+    //error not boolean
+    return res.status(400).json({"Error": "Completed attribute is not a Boolean!"});
+  } else {
+    // Never provided the property.  Default it to False
+    validAttributes.completed = false;
+  }
+
+  if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0){
+    validAttributes.description = body.description;
+  } else if(body.hasOwnProperty('description')){
+    return res.status(400).json({"Error": "description attribute is not a not a valid string!"});
+  }
+
+  //We're ready to update the todo item _.extend will update the todoItem
+  _.extend(todoItem, validAttributes);
+  res.json(todoItem);
+
+});
+
+//------------------------------------------------------
 app.listen(PORT, function(){
   console.log('Express Listening on PORT: ' + PORT);
 });
