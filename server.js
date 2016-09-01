@@ -33,6 +33,7 @@ app.get('/', function(req, res){
 });
 
 //------------------------------------------------------
+// GET URL Format    /todos/?completed=false&q=<search string>
 app.get('/todos', function(req, res){
   //get any query parameters passed in the URL
   var queryParams = req.query;
@@ -43,7 +44,14 @@ app.get('/todos', function(req, res){
   } else if (queryParams.hasOwnProperty('completed') && queryParams.completed ==='false'){
     filteredTodos = _.where(filteredTodos, {completed: false});
   }
-  
+
+  if (queryParams.hasOwnProperty('q') && queryParams.q.length > 0){
+    //var evens = _.filter([1, 2, 3, 4, 5, 6], function(num){ return num % 2 == 0; });
+    filteredTodos = _.filter(filteredTodos, function(todo){
+                                          //  return todo.description === queryParams.q; });
+                                            return todo.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1; });
+  }
+
   res.json(filteredTodos);
 });
 
