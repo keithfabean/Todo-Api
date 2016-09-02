@@ -4,6 +4,7 @@ var app = express();
 var bodyParser = require('body-parser');
 var _ = require('underscore');
 
+var db = require('./db.js');
 
 var PORT = process.env.PORT || 3000;
 
@@ -75,26 +76,41 @@ app.post('/todos', function(req, res){
   //Make sure only valid fields are in the body
   var body = _.pick(req.body, 'description', 'completed');
 
-// if the completed flag is NOT a boolean value
-//              OR
-// the description is NOT a string
-//Return a status of 400
+  db.todo.create({
+    description: body.description,
+    completed: body.completed
+  }).then(function(todo){
+      res.status(202).json(todo);
+  }).catch(function(err){
+    console.log(err);
+    res.status(400).json(err);
+  });
 
-  if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0){
-    return res.status(400).send();
-  }
 
-  //set body.description to trimed value.
-  body.description = body.description.trim();
 
-  //add id field to the todolist and increment id
-  body.id = todoNextId;
-  todoNextId = ++todoNextId;
-
-  //push body to array
-  todos.push(body);
-
-  res.json(body);
+/*
+// // if the completed flag is NOT a boolean value
+// //              OR
+// // the description is NOT a string
+// //Return a status of 400
+//
+//   if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0){
+//     return res.status(400).send();
+//   }
+//
+//   //set body.description to trimed value.
+//   body.description = body.description.trim();
+//
+//   //add id field to the todolist and increment id
+//   body.id = todoNextId;
+//   todoNextId = ++todoNextId;
+//
+//   //push body to array
+//   todos.push(body);
+//
+//   res.json(body);
+//
+*/
 
 });
 
@@ -149,7 +165,17 @@ app.put('/todos/:id', function(req, res){
 
 });
 
-//------------------------------------------------------
-app.listen(PORT, function(){
-  console.log('Express Listening on PORT: ' + PORT);
+// Start the server code inside the DB sequelize.
+//    I'm not sure why this is done this way
+db.sequelize.sync().then(function(){
+  //------------------------------------------------------
+  app.listen(PORT, function(){
+    console.log('Express Listening on PORT: ' + PORT);
+  });
+
 });
+//
+// //------------------------------------------------------
+// app.listen(PORT, function(){
+//   console.log('Express Listening on PORT: ' + PORT);
+// });
