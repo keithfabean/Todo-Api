@@ -37,23 +37,50 @@ app.get('/', function(req, res){
 // GET URL Format    /todos/?completed=false&q=<search string>
 app.get('/todos', function(req, res){
   //get any query parameters passed in the URL
-  var queryParams = req.query;
-  var filteredTodos = todos;
+  var query = req.query;
+  var where = {};
 
-  if (queryParams.hasOwnProperty('completed') && queryParams.completed ==='true'){
-    filteredTodos = _.where(filteredTodos, {completed: true});
-  } else if (queryParams.hasOwnProperty('completed') && queryParams.completed ==='false'){
-    filteredTodos = _.where(filteredTodos, {completed: false});
+  if (query.hasOwnProperty('completed') && query.completed ==='true'){
+    where.completed = true;
+  } else if (query.hasOwnProperty('completed') && query.completed ==='false'){
+    where.completed = false;
+  }
+  console.log('*** TODOS *** 001 - Where Clause');
+  console.log(where);
+
+  if (query.hasOwnProperty('q') && query.q.length > 0){
+    where.description = {
+      $like: '%' + query.q + '%'
+    };
+    console.log('*** TODOS ***  002 - Where Clause');
+    console.log(where);
   }
 
-  if (queryParams.hasOwnProperty('q') && queryParams.q.length > 0){
-    //var evens = _.filter([1, 2, 3, 4, 5, 6], function(num){ return num % 2 == 0; });
-    filteredTodos = _.filter(filteredTodos, function(todo){
-                                          //  return todo.description === queryParams.q; });
-                                            return todo.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1; });
-  }
+  db.todo.findAll({where: where}).then(function(todos){
+    res.json(todos);
+  }, function(err) {
+    res.status(500).send();
+  });
 
-  res.json(filteredTodos);
+
+  // //get any query parameters passed in the URL
+  // var queryParams = req.query;
+  // var filteredTodos = todos;
+  //
+  // if (queryParams.hasOwnProperty('completed') && queryParams.completed ==='true'){
+  //   filteredTodos = _.where(filteredTodos, {completed: true});
+  // } else if (queryParams.hasOwnProperty('completed') && queryParams.completed ==='false'){
+  //   filteredTodos = _.where(filteredTodos, {completed: false});
+  // }
+  //
+  // if (queryParams.hasOwnProperty('q') && queryParams.q.length > 0){
+  //   //var evens = _.filter([1, 2, 3, 4, 5, 6], function(num){ return num % 2 == 0; });
+  //   filteredTodos = _.filter(filteredTodos, function(todo){
+  //                                         //  return todo.description === queryParams.q; });
+  //                                           return todo.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1; });
+  // }
+  //
+  // res.json(filteredTodos);
 });
 
 //------------------------------------------------------
