@@ -60,13 +60,22 @@ app.get('/todos', function(req, res){
 app.get('/todos/:id', function(req, res){
   var todoId = parseInt(req.params.id,10);
 
-  var todoItem = _.findWhere(todos, {id: todoId});
+  // var todoItem = _.findWhere(todos, {id: todoId});
+  db.todo.findById(todoId).then(function(todoItem){
+    if(todoItem !== null){
+      res.status(200).json(todoItem);
+    }else {
+      res.status(404).send();
+    }
+  }, function(err){
+    res.status(500).send();
+  });
 
-  if (typeof todoItem === 'undefined'){
-    res.status(404).send();
-  }else {
-    res.json(todoItem);
-  }
+  // if (typeof todoItem === 'undefined'){
+  //   res.status(404).send();
+  // }else {
+  //   res.json(todoItem);
+  // }
 
 //  res.send('Asking for Todo with id of: ' + req.params.id);
 });
