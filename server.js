@@ -154,14 +154,27 @@ app.post('/todos', function(req, res){
 app.delete('/todos/:id', function(req, res){
   var todoId = parseInt(req.params.id,10);
 
-  var todoItem = _.findWhere(todos, {id: todoId});
+  db.todo.findById(todoId).then(function(todoItem){
+    if(todoItem !== null){
+      db.todo.destroy({where: {id: todoId}
+      }).then(function(rowsDeleted){
+        res.status(200).json(todoItem);
+      });
+    }else {
+      res.status(404).json({Error: 'No item found with id: ' + todoId});
+    }
+  }, function(err){
+    res.status(500).send();
+  });
 
-  if (todoItem){
-    todos = _.without(todos, todoItem);
-    res.json(todoItem);
-  }else {
-    res.status(404).json({"error": "No Item to delete with that id!"});
-  }
+  // var todoItem = _.findWhere(todos, {id: todoId});
+  //
+  // if (todoItem){
+  //   todos = _.without(todos, todoItem);
+  //   res.json(todoItem);
+  // }else {
+  //   res.status(404).json({"error": "No Item to delete with that id!"});
+  // }
 
 });
 
@@ -201,16 +214,17 @@ app.put('/todos/:id', function(req, res){
 
 });
 
+//------------------------------------------------------
 // Start the server code inside the DB sequelize.
 //    I'm not sure why this is done this way
 db.sequelize.sync().then(function(){
-  //------------------------------------------------------
+
   app.listen(PORT, function(){
     console.log('Express Listening on PORT: ' + PORT);
   });
 
 });
-//
+
 // //------------------------------------------------------
 // app.listen(PORT, function(){
 //   console.log('Express Listening on PORT: ' + PORT);
