@@ -245,6 +245,22 @@ app.put('/todos/:id', function(req, res){
   // res.json(todoItem);
 
 });
+//------------------------------------------------------
+app.post('/user', function(req, res){
+  //Make sure only valid fields are in the body
+  var body = _.pick(req.body, 'email', 'password');
+
+  db.user.create({
+    email: body.email,
+    password: body.password
+  }).then(function(user){
+      res.status(200).json(user);
+  }, function(err){
+    console.log(err);
+    res.status(400).json(err);
+  });
+
+});
 
 //------------------------------------------------------
 // Start the server code inside the DB sequelize.

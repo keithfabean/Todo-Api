@@ -4,6 +4,7 @@ var sequelize = new Sequelize(undefined, undefined, undefined, {
   'storage': __dirname + '/basic-sqlite-database.sqlite'
 });
 
+//Define the ToDo Item table structure
 var Todo = sequelize.define('todo', {
   description: {
     type: Sequelize.STRING,
