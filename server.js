@@ -3,8 +3,8 @@ var app = express();
 
 var bodyParser = require('body-parser');
 var _ = require('underscore');
-
 var db = require('./db.js');
+var bcrypt = require('bcrypt');
 
 var PORT = process.env.PORT || 3000;
 
@@ -257,6 +257,36 @@ app.post('/user', function(req, res){
     console.log(err);
     res.status(400).json(err);
   });
+
+});
+
+//------------------------------------------------------
+app.post('/users/login', function(req, res){
+  //Make sure only valid fields are in the body
+  var body = _.pick(req.body, 'email', 'password');
+
+  if ((typeof body.email !== 'string' || body.email.length === 0) ||
+      (typeof body.password !== 'string' || body.password.length === 0)) {
+        return res.status(400).send('invalid user id or password.');
+  }
+
+  db.user.findOne({ where: {email: body.email} }).then(function(user){
+    // If a user IS NOT returned OR the passwords DON'T match, send a 401 response.
+    if (!user || !bcrypt.compareSync(body.password, user.get('password_hash'))) {
+      console.log('***************************')
+      console.log(user.get('password_hash'));
+      console.log(user.password_hash);
+      return res.status(401).send('User Not Found!');
+    }
+    res.status(200).json(user.toPublicJSON());
+  }, function(err){
+    console.log(body);
+    console.log(err);
+    res.status(500).json(err);
+  });
+
+//  res.json(body);
+
 
 });
 
