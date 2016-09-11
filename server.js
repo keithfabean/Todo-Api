@@ -250,12 +250,10 @@ app.post('/user', function(req, res){
   //Make sure only valid fields are in the body
   var body = _.pick(req.body, 'email', 'password');
 
-  db.user.create({
-    email: body.email,
-    password: body.password
-  }).then(function(user){
-      res.status(200).json(user);
+  db.user.create(body).then(function(user){
+      res.status(200).json(user.toPublicJSON());
   }, function(err){
+    console.log(body);
     console.log(err);
     res.status(400).json(err);
   });
@@ -265,6 +263,7 @@ app.post('/user', function(req, res){
 //------------------------------------------------------
 // Start the server code inside the DB sequelize.
 //    I'm not sure why this is done this way
+//{force: true}
 db.sequelize.sync().then(function(){
 
   app.listen(PORT, function(){
