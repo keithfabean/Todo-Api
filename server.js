@@ -265,28 +265,11 @@ app.post('/users/login', function(req, res){
   //Make sure only valid fields are in the body
   var body = _.pick(req.body, 'email', 'password');
 
-  if ((typeof body.email !== 'string' || body.email.length === 0) ||
-      (typeof body.password !== 'string' || body.password.length === 0)) {
-        return res.status(400).send('invalid user id or password.');
-  }
-
-  db.user.findOne({ where: {email: body.email} }).then(function(user){
-    // If a user IS NOT returned OR the passwords DON'T match, send a 401 response.
-    if (!user || !bcrypt.compareSync(body.password, user.get('password_hash'))) {
-      console.log('***************************')
-      console.log(user.get('password_hash'));
-      console.log(user.password_hash);
-      return res.status(401).send('User Not Found!');
-    }
+  db.user.authenticate(body).then(function (user){
     res.status(200).json(user.toPublicJSON());
-  }, function(err){
-    console.log(body);
-    console.log(err);
-    res.status(500).json(err);
+  }, function(err) {
+    res.status(401).send('Could not authenticate.');
   });
-
-//  res.json(body);
-
 
 });
 
@@ -294,7 +277,7 @@ app.post('/users/login', function(req, res){
 // Start the server code inside the DB sequelize.
 //    I'm not sure why this is done this way
 //{force: true}
-db.sequelize.sync().then(function(){
+db.sequelize.sync({force: true}).then(function(){
 
   app.listen(PORT, function(){
     console.log('Express Listening on PORT: ' + PORT);
