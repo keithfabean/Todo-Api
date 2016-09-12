@@ -5,6 +5,7 @@ var bodyParser = require('body-parser');
 var _ = require('underscore');
 var db = require('./db.js');
 var bcrypt = require('bcrypt');
+var middleware = require('./middleware.js')(db);
 
 var PORT = process.env.PORT || 3000;
 
@@ -22,7 +23,7 @@ var todos = [{
   description: 'Brush the pool',
   completed: true
 }];
-var todoNextId = 4;
+var todoNextId = 1;
 
 app.use(bodyParser.json());
 
@@ -35,7 +36,7 @@ app.get('/', function(req, res){
 
 //------------------------------------------------------
 // GET URL Format    /todos/?completed=false&q=<search string>
-app.get('/todos', function(req, res){
+app.get('/todos', middleware.requireAuthentication, function(req, res){
   //get any query parameters passed in the URL
   var query = req.query;
   var where = {};
@@ -84,7 +85,7 @@ app.get('/todos', function(req, res){
 });
 
 //------------------------------------------------------
-app.get('/todos/:id', function(req, res){
+app.get('/todos/:id', middleware.requireAuthentication, function(req, res){
   var todoId = parseInt(req.params.id,10);
 
   // var todoItem = _.findWhere(todos, {id: todoId});
@@ -108,7 +109,7 @@ app.get('/todos/:id', function(req, res){
 });
 
 //------------------------------------------------------
-app.post('/todos', function(req, res){
+app.post('/todos', middleware.requireAuthentication, function(req, res){
   //Make sure only valid fields are in the body
   var body = _.pick(req.body, 'description', 'completed');
 
@@ -151,7 +152,7 @@ app.post('/todos', function(req, res){
 });
 
 //------------------------------------------------------
-app.delete('/todos/:id', function(req, res){
+app.delete('/todos/:id', middleware.requireAuthentication, function(req, res){
   var todoId = parseInt(req.params.id,10);
 
   db.todo.findById(todoId).then(function(todoItem){
@@ -179,7 +180,7 @@ app.delete('/todos/:id', function(req, res){
 });
 
 //------------------------------------------------------
-app.put('/todos/:id', function(req, res){
+app.put('/todos/:id', middleware.requireAuthentication, function(req, res){
   var todoId = parseInt(req.params.id,10);
 
   //Make sure only valid fields are in the body.  _.pick will remove attributes not specified
