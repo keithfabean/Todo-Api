@@ -1,5 +1,8 @@
 var bcrypt = require('bcrypt');
 var _ = require('underscore');
+var jwt = require('jsonwebtoken');
+var cryptojs = require('crypto-js');
+
 
 //--------------------------------------------------------------------
 module.exports = function(sequelize, DataTypes){
@@ -58,7 +61,7 @@ module.exports = function(sequelize, DataTypes){
               return reject();
             }
             resolve(user);
-            res.status(200).json(user.toPublicJSON());
+            // res.status(200).json(user.toPublicJSON());
           }, function(err){
             reject();
           });
@@ -70,6 +73,21 @@ module.exports = function(sequelize, DataTypes){
       toPublicJSON: function(){
         var json = this.toJSON();
         return _.pick(json, 'id', 'email', 'createdAt', 'updatedAt');
+      },
+      generateToken: function(type){
+        if (!_.isString(type)){
+          return undefined;
+        }
+        try {
+            var stringData = JSON.stringify({id: this.get('id'), type: type});
+            var encryptedData = cryptojs.AES.encrypt(stringData, 'abc123!@#').toString();
+            // jwt.sign takes the data to encrypt and a password used to encrypt the data
+            var token = jwt.sign({token: encryptedData}, 'qwerty098');
+            return token;
+        } catch(err){
+            console.error(err);
+            return undefined;
+        }
       }
     }
   });
