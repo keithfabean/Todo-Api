@@ -39,7 +39,7 @@ app.get('/', function(req, res){
 app.get('/todos', middleware.requireAuthentication, function(req, res){
   //get any query parameters passed in the URL
   var query = req.query;
-  var where = {};
+  var where = {userId: req.user.get('id')};   //return only the logged in user's todo items
 
   if (query.hasOwnProperty('completed') && query.completed ==='true'){
     where.completed = true;
@@ -88,8 +88,7 @@ app.get('/todos', middleware.requireAuthentication, function(req, res){
 app.get('/todos/:id', middleware.requireAuthentication, function(req, res){
   var todoId = parseInt(req.params.id,10);
 
-  // var todoItem = _.findWhere(todos, {id: todoId});
-  db.todo.findById(todoId).then(function(todoItem){
+  db.todo.findOne({ where: {id: todoId, userId: req.user.get('id')} }).then(function(todoItem){
     if(todoItem !== null){
       res.status(200).json(todoItem);
     }else {
@@ -123,7 +122,7 @@ app.post('/todos', middleware.requireAuthentication, function(req, res){
         console.log(err);
         res.status(400).json(err);
     });
-    
+
     /*
     // // if the completed flag is NOT a boolean value
     // //              OR
@@ -154,10 +153,9 @@ app.post('/todos', middleware.requireAuthentication, function(req, res){
 app.delete('/todos/:id', middleware.requireAuthentication, function(req, res){
     var todoId = parseInt(req.params.id,10);
 
-    db.todo.findById(todoId).then(function(todoItem){
+    db.todo.findOne({ where: {id: todoId, userId: req.user.get('id')} }).then(function(todoItem){
         if(todoItem !== null){
-            db.todo.destroy({where: {id: todoId}
-            }).then(function(rowsDeleted){
+            db.todo.destroy({where: {id: todoId, userId: req.user.get('id')} }).then(function(rowsDeleted){
                 res.status(200).json(todoItem);
             });
         }else {
@@ -180,34 +178,34 @@ app.delete('/todos/:id', middleware.requireAuthentication, function(req, res){
 
 //------------------------------------------------------
 app.put('/todos/:id', middleware.requireAuthentication, function(req, res){
-  var todoId = parseInt(req.params.id,10);
+    var todoId = parseInt(req.params.id,10);
 
-  //Make sure only valid fields are in the body.  _.pick will remove attributes not specified
-  var body = _.pick(req.body, 'description', 'completed');
-  var attributes = {};
+    //Make sure only valid fields are in the body.  _.pick will remove attributes not specified
+    var body = _.pick(req.body, 'description', 'completed');
+    var attributes = {};
 
-  if (body.hasOwnProperty('completed')){
-    attributes.completed = body.completed;
-  }
-
-  if (body.hasOwnProperty('description')){
-    attributes.description = body.description;
-  }
-
-  db.todo.findById(todoId).then(function(todo){
-    if(todo){
-      todo.update(attributes).then(function(todo){
-        res.json(todo.toJSON());
-        // .update failure
-      },function(err){
-        res.status(400).json(err);
-      });
-    }else{
-      res.status(404).send();
+    if (body.hasOwnProperty('completed')){
+        attributes.completed = body.completed;
     }
-  }, function(){
-    res.status(500).send();
-  });
+
+    if (body.hasOwnProperty('description')){
+        attributes.description = body.description;
+    }
+
+    db.todo.findOne({ where: {id: todoId, userId: req.user.get('id')} }).then(function(todoItem){
+        if(todoItem){
+            todoItem.update(attributes).then(function(todoItem){
+                res.json(todoItem.toJSON());
+                // .update failure
+            },function(err){
+                res.status(400).json(err);
+            });
+        }else{
+            res.status(404).send();
+        }
+    }, function(){
+        res.status(500).send();
+    });
 
 
   //---------------
@@ -282,7 +280,7 @@ app.post('/users/login', function(req, res){
 // Start the server code inside the DB sequelize.
 //    I'm not sure why this is done this way
 //{force: true}
-db.sequelize.sync({force: true}).then(function(){
+db.sequelize.sync().then(function(){
 
   app.listen(PORT, function(){
     console.log('Express Listening on PORT: ' + PORT);
