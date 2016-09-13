@@ -110,72 +110,71 @@ app.get('/todos/:id', middleware.requireAuthentication, function(req, res){
 
 //------------------------------------------------------
 app.post('/todos', middleware.requireAuthentication, function(req, res){
-  //Make sure only valid fields are in the body
-  var body = _.pick(req.body, 'description', 'completed');
+    //Make sure only valid fields are in the body
+    var body = _.pick(req.body, 'description', 'completed');
 
-  db.todo.create({
-    description: body.description,
-    completed: body.completed
-  }).then(function(todo){
-      res.status(202).json(todo);
-  }).catch(function(err){
-    console.log(err);
-    res.status(400).json(err);
-  });
-
-
-
-/*
-// // if the completed flag is NOT a boolean value
-// //              OR
-// // the description is NOT a string
-// //Return a status of 400
-//
-//   if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0){
-//     return res.status(400).send();
-//   }
-//
-//   //set body.description to trimed value.
-//   body.description = body.description.trim();
-//
-//   //add id field to the todolist and increment id
-//   body.id = todoNextId;
-//   todoNextId = ++todoNextId;
-//
-//   //push body to array
-//   todos.push(body);
-//
-//   res.json(body);
-//
-*/
+    db.todo.create(body).then(function(todo){
+        req.user.addTodo(todo).then( function(){
+            return todo.reload();
+        }).then(function(todo){
+            res.json(todo.toJSON());
+        });
+    }, function(err){
+        console.log(err);
+        res.status(400).json(err);
+    });
+    
+    /*
+    // // if the completed flag is NOT a boolean value
+    // //              OR
+    // // the description is NOT a string
+    // //Return a status of 400
+    //
+    //   if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0){
+    //     return res.status(400).send();
+    //   }
+    //
+    //   //set body.description to trimed value.
+    //   body.description = body.description.trim();
+    //
+    //   //add id field to the todolist and increment id
+    //   body.id = todoNextId;
+    //   todoNextId = ++todoNextId;
+    //
+    //   //push body to array
+    //   todos.push(body);
+    //
+    //   res.json(body);
+    //
+    */
 
 });
 
 //------------------------------------------------------
 app.delete('/todos/:id', middleware.requireAuthentication, function(req, res){
-  var todoId = parseInt(req.params.id,10);
+    var todoId = parseInt(req.params.id,10);
 
-  db.todo.findById(todoId).then(function(todoItem){
-    if(todoItem !== null){
-      db.todo.destroy({where: {id: todoId}
-      }).then(function(rowsDeleted){
-        res.status(200).json(todoItem);
-      });
-    }else {
-      res.status(404).json({Error: 'No item found with id: ' + todoId});
-    }
-  }, function(err){
-    res.status(500).send();
-  });
+    db.todo.findById(todoId).then(function(todoItem){
+        if(todoItem !== null){
+            db.todo.destroy({where: {id: todoId}
+            }).then(function(rowsDeleted){
+                res.status(200).json(todoItem);
+            });
+        }else {
+            res.status(404).json({Error: 'No item found with id: ' + todoId});
+        }
+    }, function(err){
+        res.status(500).send();
+    });
 
-  // var todoItem = _.findWhere(todos, {id: todoId});
-  //
-  // if (todoItem){
-  //   todos = _.without(todos, todoItem);
-  //   res.json(todoItem);
-  // }else {
-  //   res.status(404).json({"error": "No Item to delete with that id!"});
-  // }
+    // var todoItem = _.findWhere(todos, {id: todoId});
+    //
+    // if (todoItem){
+    //   todos = _.without(todos, todoItem);
+    //   res.json(todoItem);
+    // }else {
+    //   res.status(404).json({"error": "No Item to delete with that id!"});
+    // }
 
 });
 
