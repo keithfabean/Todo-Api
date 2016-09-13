@@ -37,31 +37,31 @@ app.get('/', function(req, res){
 //------------------------------------------------------
 // GET URL Format    /todos/?completed=false&q=<search string>
 app.get('/todos', middleware.requireAuthentication, function(req, res){
-  //get any query parameters passed in the URL
-  var query = req.query;
-  var where = {userId: req.user.get('id')};   //return only the logged in user's todo items
+    //get any query parameters passed in the URL
+    var query = req.query;
+    var where = {userId: req.user.get('id')};   //return only the logged in user's todo items
 
-  if (query.hasOwnProperty('completed') && query.completed ==='true'){
-    where.completed = true;
-  } else if (query.hasOwnProperty('completed') && query.completed ==='false'){
-    where.completed = false;
-  }
-  console.log('*** TODOS *** 001 - Where Clause');
-  console.log(where);
-
-  if (query.hasOwnProperty('q') && query.q.length > 0){
-    where.description = {
-      $like: '%' + query.q + '%'
-    };
-    console.log('*** TODOS ***  002 - Where Clause');
+    if (query.hasOwnProperty('completed') && query.completed ==='true'){
+        where.completed = true;
+    } else if (query.hasOwnProperty('completed') && query.completed ==='false'){
+        where.completed = false;
+    }
+    console.log('*** TODOS *** 001 - Where Clause');
     console.log(where);
-  }
 
-  db.todo.findAll({where: where}).then(function(todos){
-    res.json(todos);
-  }, function(err) {
-    res.status(500).send();
-  });
+    if (query.hasOwnProperty('q') && query.q.length > 0){
+        where.description = {
+            $like: '%' + query.q + '%'
+        };
+        console.log('*** TODOS ***  002 - Where Clause');
+        console.log(where);
+    }
+
+    db.todo.findAll({where: where}).then(function(todos){
+        res.json(todos);
+    }, function(err) {
+        res.status(500).send();
+    });
 
 
   // //get any query parameters passed in the URL
@@ -280,7 +280,7 @@ app.post('/users/login', function(req, res){
 // Start the server code inside the DB sequelize.
 //    I'm not sure why this is done this way
 //{force: true}
-db.sequelize.sync().then(function(){
+db.sequelize.sync({force: true}).then(function(){
 
   app.listen(PORT, function(){
     console.log('Express Listening on PORT: ' + PORT);
